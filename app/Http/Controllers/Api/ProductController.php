@@ -3,19 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Http\Resources\ProductResource;
 use App\Http\Requests\ProductRequest;
 use App\Http\Requests\UpdateStockRequest;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Interfaces\ProductRepositoryInterface;
 class ProductController extends Controller
 {
+    private ProductRepositoryInterface $productRepository;
+
+public function __construct(ProductRepositoryInterface $productRepository)
+{
+    $this->productRepository = $productRepository;
+}
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index():AnonymousResourceCollection
 {
-    $products = Product::paginate(10);
+    $products = $this->productRepository->getAllProducts();
 
     return ProductResource::collection($products);
 }
@@ -25,7 +32,7 @@ class ProductController extends Controller
      */
     public function store(ProductRequest $request)
     {
-         $product = Product::create($request->validated());
+        $product = $this->productRepository->createProduct($request->validated());
 
         return new ProductResource($product);
     }
@@ -36,7 +43,7 @@ class ProductController extends Controller
 
 public function show(string $id)
 {
-    $product = Product::findOrFail($id);
+    $product = $this->productRepository->getProductById($id);
 
     return new ProductResource($product);
 }
@@ -46,33 +53,28 @@ public function show(string $id)
      */
     public function update(ProductRequest $request, string $id)
     {
-         $product = Product::findOrFail($id);
-         $product->update($request->validated());
+        $product = $this->productRepository->updateProduct(
+         $id,
+        $request->validated()
+        );
 
-        return new ProductResource($product);
+       return new ProductResource($product);
     }
     public function updateStock(UpdateStockRequest $request, string $id)
     {
 
-    $product = Product::findOrFail($id);
+    $product = $this->productRepository->updateStock(
+    $id,
+    $request->validated()
+);
 
-    if ($request->type === 'increment') {
-        $product->increment('stock_quantity', $request->quantity);
-    } else {
-        if ($product->stock_quantity < $request->quantity) {
-            return response()->json([
-                'message' => 'Insufficient stock.',
-            ], 422);
-        }
-
-        $product->decrement('stock_quantity', $request->quantity);
+      return new ProductResource($product);
     }
 
-    return new ProductResource($product->fresh());
-    }
-    public function lowStock()
+
+    public function lowStock():AnonymousResourceCollection
 {
-    $products = Product::lowStock()->get();
+    $products = $this->productRepository->getLowStockProducts();
 
     return ProductResource::collection($products);
 }
@@ -83,9 +85,11 @@ public function show(string $id)
      */
     public function destroy(string $id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
+       $this->productRepository->deleteProduct($id);
 
-        return response()->noContent();
+       return response()->noContent();
+
+
+
     }
 }

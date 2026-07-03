@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Api\ProductController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::get('/products/low-stock', [ProductController::class, 'lowStock'])
+    ->name('products.lowStock');
+
+Route::apiResource('products', ProductController::class);
+
+Route::post('/products/{product}/stock', [ProductController::class, 'updateStock'])
+    ->name('products.updateStock');
