@@ -5,13 +5,21 @@ namespace App\Repositories;
 use App\Interfaces\ProductRepositoryInterface;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 class ProductRepository implements ProductRepositoryInterface
 {
-    public function getAllProducts(): LengthAwarePaginator
-    {
+   public function getAllProducts(): LengthAwarePaginator
+{
+    $page = request()->get('page', 1);
 
-           return Product::paginate(10);
-    }
+    return Cache::remember(
+        "products_page_{$page}",
+        now()->addMinutes(10),
+        function () {
+            return Product::paginate(10);
+        }
+    );
+}
 
     public function getProductById(string $id): Product
     {
