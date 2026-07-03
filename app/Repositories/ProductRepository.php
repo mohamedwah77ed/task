@@ -6,6 +6,8 @@ use App\Interfaces\ProductRepositoryInterface;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
+use App\Events\LowStockAlert;
+
 class ProductRepository implements ProductRepositoryInterface
 {
    public function getAllProducts(): LengthAwarePaginator
@@ -65,7 +67,13 @@ class ProductRepository implements ProductRepositoryInterface
         $product->decrement('stock_quantity', $data['quantity']);
     }
 
-    return $product->fresh();
+    $product->refresh();
+
+    if ($product->stock_quantity <= $product->low_stock_threshold) {
+        LowStockAlert::dispatch($product);
+    }
+
+    return $product;
 }
 
 
