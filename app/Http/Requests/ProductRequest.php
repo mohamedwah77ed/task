@@ -20,18 +20,30 @@ class ProductRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
-    {
-          $productId = $this->route('product');
-         return [
 
+
+ public function rules(): array
+{
+    $product = $this->route('product');
+    $productId = is_object($product) ? $product->id : $product;
+
+    return [
         'name' => 'required|string|max:255',
-        'sku' => 'required|string|unique:products,sku',
+
+        'sku' => [
+            'required',
+            'string',
+            Rule::unique('products', 'sku')->ignore($productId),
+        ],
+
         'description' => 'nullable|string',
         'price' => 'required|numeric|min:0',
         'stock_quantity' => 'required|integer|min:0',
         'low_stock_threshold' => 'nullable|integer|min:0',
-        'status' => ['required', Rule::in(['active', 'inactive', 'discontinued'])],
+        'status' => [
+            'required',
+            Rule::in(['active', 'inactive', 'discontinued']),
+        ],
     ];
-    }
+}
 }
