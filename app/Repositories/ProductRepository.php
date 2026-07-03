@@ -31,7 +31,11 @@ class ProductRepository implements ProductRepositoryInterface
 
     public function createProduct(array $data): Product
     {
-           return Product::create($data);
+           $product = Product::create($data);
+
+           Cache::flush();
+
+           return $product;
 
     }
 
@@ -41,6 +45,8 @@ class ProductRepository implements ProductRepositoryInterface
 
          $product->update($data);
 
+         Cache::flush();
+
           return $product;
     }
 
@@ -49,7 +55,11 @@ class ProductRepository implements ProductRepositoryInterface
 
     $product = Product::findOrFail($id);
 
-    return $product->delete();
+    $deleted = $product->delete();
+
+    Cache::flush();
+
+    return $deleted;
     }
 
 
@@ -72,6 +82,8 @@ class ProductRepository implements ProductRepositoryInterface
     if ($product->stock_quantity <= $product->low_stock_threshold) {
         LowStockAlert::dispatch($product);
     }
+
+    Cache::flush();
 
     return $product;
 }
