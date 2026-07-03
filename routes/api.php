@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 /*
@@ -14,10 +13,14 @@ use App\Http\Controllers\Api\ProductController;
 |
 */
 
-Route::get('/products/low-stock', [ProductController::class, 'lowStock'])
-    ->name('products.lowStock');
+Route::middleware('throttle:api')->group(function () {
 
-Route::apiResource('products', ProductController::class);
+    Route::get('/products/low-stock', [ProductController::class, 'lowStock'])
+        ->name('products.lowStock');
 
-Route::post('/products/{product}/stock', [ProductController::class, 'updateStock'])
-    ->name('products.updateStock');
+    Route::apiResource('products', ProductController::class);
+
+    Route::post('/products/{product}/stock', [ProductController::class, 'updateStock'])
+        ->name('products.updateStock');
+
+});
